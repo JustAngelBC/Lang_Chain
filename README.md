@@ -9,7 +9,7 @@ API en FastAPI con LangChain usando modelos de Gemini.
 
 ## Variables de entorno
 - `GOOGLE_API_KEY` (obligatoria)
-- `MODEL_NAME` (opcional, por defecto `gemini-1.5-flash`)
+- `MODEL_NAME` (opcional, por defecto `gemini-2.5-flash`)
 
 ## Docker local
 ```bash

@@ -8,7 +8,7 @@ def build_model():
     if not api_key:
         raise ValueError("Falta GOOGLE_API_KEY en variables de entorno.")
     # Modelos comunes: "gemini-1.5-flash" (rápido) o "gemini-1.5-pro" (más capaz)
-    model_name = os.getenv("MODEL_NAME", "gemini-1.5-flash")
+    model_name = os.getenv("MODEL_NAME", "gemini-2.5-flash")
     return ChatGoogleGenerativeAI(model=model_name, temperature=0)
 
 def answer_sync(user_input: str) -> str:

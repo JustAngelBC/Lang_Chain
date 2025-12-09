@@ -4,21 +4,19 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from .agent import answer_sync
+from .google_oauth import router as oauth_router
+from .google_actions import router as actions_router
 
 app = FastAPI(title="Agente Gemini + LangChain")
+app.state.google_creds = None  # guardaremos las credenciales aquí
 
-# Configuración CORS
-origins = [
-    "https://ui.ponganos10.online",  # tu frontend
-    # Si quieres permitir más orígenes, agrégalos aquí
-]
-
+origins = [ "https://ui.ponganos10.online" ]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,          # Lista de orígenes permitidos
-    allow_credentials=True,         # Permitir cookies/autenticación
-    allow_methods=["*"],            # Permitir todos los métodos (GET, POST, OPTIONS)
-    allow_headers=["*"],            # Permitir todos los encabezados
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 class Query(BaseModel):
@@ -28,6 +26,7 @@ class Query(BaseModel):
 def health():
     return {"status": "ok"}
 
+# Tu agente de texto (RAG/LLM) sigue igual
 @app.post("/agent/invoke")
 def invoke(q: Query):
     try:
@@ -35,3 +34,7 @@ def invoke(q: Query):
         return {"output": output}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# OAuth + acciones
+app.include_router(oauth_router)
+app.include_router(actions_router)

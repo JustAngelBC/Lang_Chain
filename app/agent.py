@@ -11,7 +11,7 @@ from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langgraph.prebuilt import create_react_agent
 from langgraph.checkpoint.memory import MemorySaver
 
-from .agent_tools import TOOLS  # Tools de Gmail y Calendar
+from .agent_tools import TOOLS, pdf_storage  # Tools de Gmail y Calendar + PDF storage
 
 
 # ---------- System prompt para el agente ----------
@@ -115,14 +115,35 @@ def _extract_response(result: dict) -> str:
     return "[Sin contenido del modelo]"
 
 
+def _build_message_with_context(user_input: str) -> str:
+    """Construye el mensaje del usuario, incluyendo contexto del PDF si está cargado."""
+    # Si hay un PDF cargado, incluir su contenido en el contexto
+    if pdf_storage.get("content"):
+        pdf_data = pdf_storage["content"]
+        pdf_text = pdf_data.get("text", "")[:12000]  # Limitar a 12k caracteres
+        filename = pdf_data.get("filename", "documento.pdf")
+        pages = pdf_data.get("pages", 0)
+        
+        return f"""[CONTEXTO: El usuario tiene cargado el PDF "{filename}" ({pages} páginas). Contenido del documento:]
+
+{pdf_text}
+
+[FIN DEL DOCUMENTO]
+
+Pregunta del usuario: {user_input}"""
+    
+    return user_input
+
+
 def answer_sync(session_id: str, user_input: str) -> str:
     """
     Invocación síncrona con memoria por sesión.
     El agente puede usar tools automáticamente.
     """
     agent = _get_agent()
+    message_content = _build_message_with_context(user_input)
     result = agent.invoke(
-        {"messages": [HumanMessage(content=user_input)]},
+        {"messages": [HumanMessage(content=message_content)]},
         config={"configurable": {"thread_id": session_id}},
     )
     return _extract_response(result)
@@ -133,8 +154,9 @@ async def answer_async(session_id: str, user_input: str) -> str:
     Invocación asíncrona con memoria por sesión.
     """
     agent = _get_agent()
+    message_content = _build_message_with_context(user_input)
     result = await agent.ainvoke(
-        {"messages": [HumanMessage(content=user_input)]},
+        {"messages": [HumanMessage(content=message_content)]},
         config={"configurable": {"thread_id": session_id}},
     )
     return _extract_response(result)

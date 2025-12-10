@@ -1,17 +1,27 @@
-fastapi
-uvicorn
-langchain>=0.3.0
-langchain-google-genai>=0.2.0
+
+# Servidor
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+
+# LangChain + Gemini (tools + memoria)
+langchain>=0.2.11
+langchain-core>=0.2.33
+langchain-google-genai>=3.2.0
+
+# Cliente HTTP para tools
+httpx>=0.27.0
+
+# Validación y utilidades
 pydantic>=2.9.0
-python-dotenv
-langchain-community
-faiss-cpu
-python-dotenv
-google-api-python-client
+pydantic[email]>=2.9.0
+email-validator>=2.1.0
+python-dotenv>=1.0.1
 
-google-auth-httplib2
-google-auth-oauthlib
+# Google APIs (Gmail + Calendar + OAuth)
+google-api-python-client>=2.133.0
+google-auth-httplib2>=0.2.0
+google-auth-oauthlib>=1.2.1
 
-pydantic[email]
-email-validator
-
+# (Opcionales) RAG / comunidad
+langchain-community>=0.2.10
+faiss-cpu>=1.8.0

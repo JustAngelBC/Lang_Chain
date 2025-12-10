@@ -9,12 +9,12 @@ from googleapiclient.discovery import build
 
 router = APIRouter()
 
-# -------- Gmail --------
+# ---------- Gmail ----------
 class GmailMessage(BaseModel):
     to: EmailStr
     subject: str
     body: str
-    from_email: Optional[EmailStr] = None  # opcional: alias remitente
+    from_email: Optional[EmailStr] = None  # alias remitente (opcional)
 
 @router.post("/gmail/send")
 def gmail_send(msg: GmailMessage, request: Request):
@@ -23,17 +23,18 @@ def gmail_send(msg: GmailMessage, request: Request):
         raise HTTPException(status_code=401, detail="No hay credenciales Google válidas. Conecta en /auth/google.")
 
     service = build("gmail", "v1", credentials=creds)
-    # Construye MIME simple
+
+    # MIME simple
     raw_msg = f"From: {msg.from_email or 'me'}\nTo: {msg.to}\nSubject: {msg.subject}\n\n{msg.body}"
     encoded = base64.urlsafe_b64encode(raw_msg.encode("utf-8")).decode("utf-8")
     create_body = {"raw": encoded}
 
-    # users.messages.send (userId='me' indica el usuario autenticado) [8](https://developers.google.com/workspace/gmail/api/reference/rest/v1/users.messages/send)
+    # users.messages.send (userId='me')
     sent = service.users().messages().send(userId="me", body=create_body).execute()
     return {"messageId": sent.get("id")}
 
 
-# -------- Calendar --------
+# ---------- Calendar ----------
 class CalendarEvent(BaseModel):
     summary: str
     description: Optional[str] = None
@@ -58,7 +59,6 @@ def calendar_event(ev: CalendarEvent, request: Request):
         "end": {"dateTime": ev.end_datetime, "timeZone": ev.timezone},
         "attendees": [{"email": a} for a in (ev.attendees or [])],
     }
-    # events.insert sobre el calendarId 'primary' requiere el scope de Calendar. [2](https://developers.google.com/workspace/calendar/api/guides/create-events)
-    created = service.events().insert(calendarId="primary", body=body).execute()
-    return {"eventId": created.get("id"), "htmlLink": created.get("htmlLink")}
 
+    # events.insert sobre 'primary'
+    created = service.events().insert(calendarId="primary", body=body).execute()

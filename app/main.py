@@ -6,10 +6,6 @@ from pydantic import BaseModel
 from .agent import answer_sync
 from .google_oauth import router as oauth_router
 from .google_actions import router as actions_router
-from fastapi import UploadFile, File
-from .pdf_ingest import save_pdf_and_text
-from .agent import rebuild_index  # lo agregamos en el paso 3.2
-
 
 app = FastAPI(title="Agente Gemini + LangChain")
 app.state.google_creds = None  # guardaremos las credenciales aquí
@@ -42,13 +38,3 @@ def invoke(q: Query):
 # OAuth + acciones
 app.include_router(oauth_router)
 app.include_router(actions_router)
-
-
-@app.post("/upload/pdf")
-async def upload_pdf(file: UploadFile = File(...)):
-    content = await file.read()
-    info = save_pdf_and_text(content, file.filename)
-    # Reindexar tras ingesta
-    rebuild_index()
-    return {"ok": True, "file": file.filename, "pages": info["pages"]}
-

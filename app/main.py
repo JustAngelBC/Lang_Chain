@@ -7,6 +7,7 @@ from .agent import answer_sync  # usa la versión con session_id
 from .google_oauth import router as oauth_router
 from .google_actions import router as actions_router
 from .pdf_ingest import save_pdf_and_text
+from .agent_tools import pdf_storage  # Almacén compartido para PDFs
 
 app = FastAPI(title="Agente Gemini + LangChain")
 app.state.google_creds = None  # guardaremos las credenciales aquí
@@ -50,11 +51,14 @@ async def upload_pdf(file: UploadFile = File(...)):
         
         # Leer el texto extraído y guardarlo en memoria
         with open(result["txt_path"], "r", encoding="utf-8") as f:
-            app.state.pdf_content = {
+            pdf_data = {
                 "filename": file.filename,
                 "text": f.read(),
                 "pages": result["pages"],
             }
+            app.state.pdf_content = pdf_data
+            # También actualizar el almacén compartido para las tools
+            pdf_storage["content"] = pdf_data
         
         return {
             "message": f"PDF '{file.filename}' procesado correctamente",

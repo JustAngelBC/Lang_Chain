@@ -118,6 +118,13 @@ calendar_create_tool = StructuredTool.from_function(
     args_schema=CalendarEventArgs,
 )
 
+# ---------- PDF Storage (compartido con main.py) ----------
+# Este diccionario se actualiza desde main.py cuando se sube un PDF
+pdf_storage = {
+    "content": None  # {"filename": str, "text": str, "pages": int}
+}
+
+
 # ---------- PDF Query Tool ----------
 class PdfQueryArgs(BaseModel):
     question: str = Field(..., description="Pregunta sobre el contenido del PDF")
@@ -125,24 +132,19 @@ class PdfQueryArgs(BaseModel):
 
 def pdf_query_impl(question: str) -> str:
     """Consulta el contenido del PDF cargado."""
-    try:
-        with httpx.Client(timeout=10) as client:
-            # Primero verificar si hay un PDF cargado
-            res = client.get(f"{API_BASE}/pdf/content")
-            if res.status_code == 404:
-                return "❌ No hay ningún PDF cargado. El usuario debe subir un PDF primero."
-            if res.status_code >= 400:
-                return f"❌ Error al consultar PDF: {res.text}"
-            
-            data = res.json()
-            filename = data.get("filename", "documento")
-            text = data.get("text", "")
-            pages = data.get("pages", 0)
-            
-            # Retornar el contenido para que Gemini lo analice
-            return f"📄 Contenido del PDF '{filename}' ({pages} páginas):\n\n{text[:15000]}"  # Limitar a 15k chars
-    except Exception as e:
-        return f"❌ Error de conexión: {str(e)}"
+    if not pdf_storage["content"]:
+        return "❌ No hay ningún PDF cargado. El usuario debe subir un PDF primero usando el botón '📄 Subir PDF'."
+    
+    data = pdf_storage["content"]
+    filename = data.get("filename", "documento")
+    text = data.get("text", "")
+    pages = data.get("pages", 0)
+    
+    if not text.strip():
+        return f"❌ El PDF '{filename}' no tiene texto extraíble (puede ser un PDF escaneado o con imágenes)."
+    
+    # Retornar el contenido para que Gemini lo analice
+    return f"📄 Contenido del PDF '{filename}' ({pages} páginas):\n\n{text[:15000]}"  # Limitar a 15k chars
 
 
 pdf_query_tool = StructuredTool.from_function(

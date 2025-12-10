@@ -30,3 +30,10 @@ def answer_sync(user_input: str) -> str:
     if not text or not text.strip():
         return "[Sin contenido del modelo]"  # fallback visible
     return text.strip()
+
+
+# app/agent.py (solo añade esto al final)
+def rebuild_index():
+    global VECTORSTORE, RETRIEVER
+    VECTORSTORE = build_or_load_vectorstore()
+    RETRIEVER = VECTORSTORE.as_retriever(search_kwargs={"k": 4})

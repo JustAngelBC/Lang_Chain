@@ -118,5 +118,45 @@ calendar_create_tool = StructuredTool.from_function(
     args_schema=CalendarEventArgs,
 )
 
+# ---------- PDF Query Tool ----------
+class PdfQueryArgs(BaseModel):
+    question: str = Field(..., description="Pregunta sobre el contenido del PDF")
+
+
+def pdf_query_impl(question: str) -> str:
+    """Consulta el contenido del PDF cargado."""
+    try:
+        with httpx.Client(timeout=10) as client:
+            # Primero verificar si hay un PDF cargado
+            res = client.get(f"{API_BASE}/pdf/content")
+            if res.status_code == 404:
+                return "❌ No hay ningún PDF cargado. El usuario debe subir un PDF primero."
+            if res.status_code >= 400:
+                return f"❌ Error al consultar PDF: {res.text}"
+            
+            data = res.json()
+            filename = data.get("filename", "documento")
+            text = data.get("text", "")
+            pages = data.get("pages", 0)
+            
+            # Retornar el contenido para que Gemini lo analice
+            return f"📄 Contenido del PDF '{filename}' ({pages} páginas):\n\n{text[:15000]}"  # Limitar a 15k chars
+    except Exception as e:
+        return f"❌ Error de conexión: {str(e)}"
+
+
+pdf_query_tool = StructuredTool.from_function(
+    name="pdf_query",
+    description=(
+        "Consulta el contenido del PDF que el usuario ha subido. "
+        "Usa esta herramienta cuando el usuario pregunte sobre un PDF, documento, archivo, "
+        "o quiera que analices/resumas/busques algo en el documento cargado. "
+        "Requiere: question (la pregunta del usuario sobre el PDF)."
+    ),
+    func=pdf_query_impl,
+    args_schema=PdfQueryArgs,
+)
+
+
 # Lista de tools disponibles para el agente
-TOOLS = [gmail_send_tool, calendar_create_tool]
+TOOLS = [gmail_send_tool, calendar_create_tool, pdf_query_tool]

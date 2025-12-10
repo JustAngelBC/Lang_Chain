@@ -62,12 +62,23 @@ def _get_agent():
 def _extract_response(result: dict) -> str:
     """Extrae el texto de respuesta del resultado del agente."""
     messages = result.get("messages", [])
-    # Buscar el último mensaje AI que no sea tool call
+    # Buscar el último mensaje AI que tenga contenido de texto
     for msg in reversed(messages):
         if isinstance(msg, AIMessage) and msg.content:
-            # Ignorar mensajes que solo tienen tool_calls
-            if not msg.tool_calls or msg.content.strip():
-                return msg.content.strip()
+            content = msg.content
+            # msg.content puede ser string o lista de partes
+            if isinstance(content, list):
+                # Extraer solo las partes de texto
+                text_parts = []
+                for part in content:
+                    if isinstance(part, str):
+                        text_parts.append(part)
+                    elif isinstance(part, dict) and part.get("type") == "text":
+                        text_parts.append(part.get("text", ""))
+                content = " ".join(text_parts)
+            
+            if isinstance(content, str) and content.strip():
+                return content.strip()
     return "[Sin contenido del modelo]"
 
 

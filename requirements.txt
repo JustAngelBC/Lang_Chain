@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+langchain>=0.3.0
+langchain-google-genai>=0.2.0
+pydantic>=2.9.0
+python-dotenv
+langchain-community
+faiss-cpu
+python-dotenv
+google-api-python-client
+
+google-auth-httplib2
+google-auth-oauthlib
+
+pydantic[email]
+email-validator
+

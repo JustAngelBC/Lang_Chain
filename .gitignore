@@ -1,0 +1,12 @@
+
+# Python
+__pycache__/
+*.pyc
+
+# Entornos
+.env
+.venv/
+venv/
+
+# Docker
+*.log

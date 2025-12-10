@@ -15,18 +15,46 @@ from .agent_tools import TOOLS  # Tools de Gmail y Calendar
 
 
 # ---------- System prompt para el agente ----------
-SYSTEM_PROMPT = """Eres un asistente personal inteligente con acceso a Gmail y Google Calendar.
+def get_system_prompt() -> str:
+    """Genera el system prompt con la fecha actual."""
+    from datetime import datetime
+    now = datetime.now()
+    today = now.strftime("%Y-%m-%d")
+    day_name = now.strftime("%A")
+    
+    # Mapeo de días en español
+    days_es = {
+        "Monday": "Lunes", "Tuesday": "Martes", "Wednesday": "Miércoles",
+        "Thursday": "Jueves", "Friday": "Viernes", "Saturday": "Sábado", "Sunday": "Domingo"
+    }
+    day_es = days_es.get(day_name, day_name)
+    
+    return f"""Eres un asistente personal inteligente con acceso a Gmail y Google Calendar.
+
+FECHA Y HORA ACTUAL: Hoy es {day_es}, {today}. La zona horaria es America/Mazatlan (UTC-07:00).
 
 CAPACIDADES:
 - Puedes enviar correos electrónicos usando la herramienta 'gmail_send'
 - Puedes crear eventos en el calendario usando 'calendar_create_event'
 
-INSTRUCCIONES:
-- Si el usuario pide enviar un correo, usa gmail_send con to, subject y body
-- Si el usuario pide crear un evento/cita/reunión, usa calendar_create_event
-- Para fechas, usa formato RFC3339 (ej: 2025-12-10T10:00:00-07:00)
-- Si faltan datos necesarios, pregunta al usuario antes de ejecutar
-- Sé amable, conciso y confirma cuando completes una acción
+INSTRUCCIONES PARA CORREOS:
+- Usa gmail_send con to, subject y body
+
+INSTRUCCIONES PARA EVENTOS:
+- Usa calendar_create_event con summary, start_datetime, end_datetime
+- IMPORTANTE: Las fechas deben estar en formato RFC3339 (ej: 2025-12-11T10:00:00-07:00)
+- Cuando el usuario diga "mañana", calcula la fecha sumando 1 día a {today}
+- Cuando diga "pasado mañana", suma 2 días
+- Cuando diga "el lunes", calcula la fecha del próximo lunes
+- Siempre usa la zona horaria America/Mazatlan (-07:00)
+- Si el usuario dice "10:00 AM", conviértelo a "10:00:00-07:00"
+- Si dice "11:30 AM", conviértelo a "11:30:00-07:00"
+
+COMPORTAMIENTO:
+- NO preguntes por la fecha si el usuario dice "mañana", "hoy", "pasado mañana", etc. Calcula la fecha tú mismo.
+- NO preguntes por la zona horaria, usa America/Mazatlan por defecto.
+- Sé proactivo: si tienes suficiente información, ejecuta la acción.
+- Confirma brevemente cuando completes una acción.
 - Si hay error de credenciales, indica que deben conectarse en /auth/google"""
 
 
@@ -53,8 +81,8 @@ def _get_agent():
         _agent = create_react_agent(
             model=llm,
             tools=TOOLS,
-            prompt=SYSTEM_PROMPT,
-            checkpointer=_memory,  # Habilita memoria por sesión
+            prompt=get_system_prompt(),  # Prompt dinámico con fecha actual
+            checkpointer=_memory,
         )
     return _agent
 

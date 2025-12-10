@@ -52,19 +52,17 @@ def _get_session_history(session_id: str) -> InMemoryChatMessageHistory:
     return _session_store[session_id]
 
 
+
 def _get_agent_with_memory():
-    """
-    Envuelve la cadena base con memoria por sesión usando RunnableWithMessageHistory.
-    input_messages_key = "input" (tu campo de entrada)
-    history_messages_key = "history" (coincide con MessagesPlaceholder)
-    """
     base = _get_base_chain()
     return RunnableWithMessageHistory(
         runnable=base,
-        get_message_history=_get_session_history,
+        # 👇 nombre que tu versión espera
+        get_session_history=_get_session_history,
         input_messages_key="input",
         history_messages_key="history",
     )
+
 
 
 def answer_sync(session_id: str, user_input: str) -> str:

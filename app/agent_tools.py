@@ -3,7 +3,7 @@
 import os
 import httpx
 from pydantic import BaseModel, Field, EmailStr
-from langchain.tools import StructuredTool
+from langchain_core.tools import StructuredTool
 
 # Tu backend público; ajústalo si cambia.
 API_BASE = os.getenv("API_BASE", "https://asistente.ponganos10.online")

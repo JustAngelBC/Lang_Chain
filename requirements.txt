@@ -4,7 +4,7 @@ fastapi>=0.115.0
 uvicorn[standard]>=0.32.0
 
 # LangChain + Gemini (tools + memoria)
-langchain>=0.2.11
+langchain>=0.3.0
 langchain-core>=0.2.33
 langchain-google-genai>=3.2.0
 

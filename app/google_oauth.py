@@ -52,4 +52,4 @@ def oauth2_callback(request: Request):
 
     # Guarda tokens en memoria (demo) o DB; aquí como atributo global de app
     request.app.state.google_creds = creds
-    return RedirectResponse(url="/docs")  # o tu frontend
+    return RedirectResponse(url="https://ui.ponganos10.online/")
